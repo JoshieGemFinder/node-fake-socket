@@ -47,8 +47,8 @@ Actually triggers the event specified, with the data specified.
 * Returns: [`<FakeSocket>`](#class-fakesocket) The socket itself.  
   
 This is required for making the socket actually connect to the server, similar to [`net.Socket.connect()`](https://nodejs.org/api/net.html#socketconnect).  
-  
-This method exists by default if the socket is created through [`createFakeSocket()`](#createfakesockets).  
+
+This method only exists by default if the socket is created through [`createFakeSocket()`](#createfakesockets).  
 
 ## `createFakeSocket()`  
 * Returns: [`<FakeSocket>`](#class-fakesocket) A socket that is ready to be connected via [`FakeSocket.mockConnect`](#fakesocketmockconnectserver).  
