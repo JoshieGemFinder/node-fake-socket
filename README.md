@@ -36,10 +36,12 @@ Gets this socket's counterpart socket, (should not need to be used unless you kn
   
 ### `FakeSocket.emit(eventName[, ...args])`  
 * See [`EventEmitter.emit`](https://nodejs.org/api/events.html#emitteremiteventname-args).  
+  
 Triggering this will make its counterpart emit the event, use [`FakeSocket._emit(event, ...data)`](#fakesocketemiteventname-args-1) if you want to actually make it emit an event.  
   
 ### `FakeSocket._emit(eventName[, ...args])`  
 * See [`EventEmitter.emit`](https://nodejs.org/api/events.html#emitteremiteventname-args).  
+  
 Actually triggers the event specified, with the data specified.  
   
 ### `FakeSocket.mockConnect(server)`  
