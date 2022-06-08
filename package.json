@@ -1,0 +1,33 @@
+{
+  "name": "fake-net-socket",
+  "version": "1.0.0",
+  "description": "A fake net socket, that allows you to connect to local servers that don't have any open ports!",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/JoshieGemFinder/node-fake-socket.git"
+  },
+  "files": [
+    "index.js",
+    "README.md"
+  ],
+  "keywords": [
+    "socket",
+    "node",
+    "mock",
+    "fake",
+    "net",
+    "http",
+    "https",
+    "tls"
+  ],
+  "author": "Gemm",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/JoshieGemFinder/node-fake-socket/issues"
+  },
+  "homepage": "https://github.com/JoshieGemFinder/node-fake-socket#readme"
+}
