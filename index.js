@@ -7,9 +7,11 @@ const net = require('net'),
 class FakeSocket extends Socket {
     #counterpart;
     #encoding;
+    #data;
     
     constructor() {
         super(arguments);
+        this.#data = Buffer.alloc(0);
     }
     
     setEncoding(encoding) {
@@ -17,7 +19,7 @@ class FakeSocket extends Socket {
         return this;
     }
     
-    getEncoding(encoding) {
+    getEncoding() {
         return this.#encoding
     }
     
@@ -30,13 +32,27 @@ class FakeSocket extends Socket {
         return this.#counterpart;
     }
     
+    read(size=-1, encode=true) {
+        let end = size >= 0 ? size : this.#data.length
+        let data = size >= this.#data.slice(0, size) : this.#data.slice()
+        this.#data = this.#data.slice(end)
+        if(encode && this.#encoding != null) {
+            data = data.toString(this.#encoding)
+        }
+        return data
+    }
+    
+    unshift(data, encoding='utf8') {
+        this.#data = Buffer.concat([Buffer.from(data, encoding), this.#data])
+    }
+    
     write(data, encoding='utf8', callback=null) {
-        let buf = Buffer.from(data, encoding)
+        let buf = Buffer.concat([read(-1, false), Buffer.from(data, encoding)])
         let counterEncoding = this.#counterpart.getEncoding();
         if(counterEncoding != null) {
             buf = buf.toString(counterEncoding);
         }
-        this.#counterpart.trueEmit('data', buf);
+        this.#counterpart._emit('data', buf);
         if(callback != null && (typeof(callback) == 'function' || callback instanceof Function)) {
             callback();
         }
@@ -57,9 +73,9 @@ let oldEmit = FakeSocket.prototype.emit;
 
 //use Array.prototype.slice.apply since the "..." operator will error if ...args resolves to some non-array somehow
 FakeSocket.prototype.emit = function(...args) {
-    this.getCounterpart().trueEmit(...Array.prototype.slice.apply(args));
+    this.getCounterpart()._emit(...Array.prototype.slice.apply(args));
 }
-FakeSocket.prototype.trueEmit = function(...args) {
+FakeSocket.prototype._emit = function(...args) {
     oldEmit.apply(this, Array.prototype.slice.apply(args));
 }
 
@@ -77,6 +93,8 @@ function createFakeSocket() {
         server.emit('connection', output);
         return this;
     }
+    
+    input.connect = input.mockConnect
     
     return input;
 }
@@ -97,6 +115,8 @@ function createMultiSocket() {
         
         return this;
     }
+    
+    input.connect = input.mockConnect
     
     return input
 }
