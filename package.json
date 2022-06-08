@@ -1,6 +1,6 @@
 {
   "name": "fake-net-socket",
-  "version": "1.0.1",
+  "version": "1.0.2",
   "description": "A fake net socket, that allows you to connect to local servers that don't have any open ports!",
   "main": "index.js",
   "scripts": {
