@@ -1,5 +1,5 @@
 const net = require('net'),
-      fakeSocket = require('fake-socket');
+      fakeSocket = require('fake-net-socket');
 
 //create a net server
 let server = net.createServer(socket => {

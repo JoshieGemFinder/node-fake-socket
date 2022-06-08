@@ -1,5 +1,5 @@
 const http = require('http'),
-      fakeSocket = require('fake-socket');
+      fakeSocket = require('fake-net-socket');
 
 // start a http server
 var httpServer = http.createServer((req, res) => {
