@@ -4,14 +4,47 @@ const net = require('net'),
       util = require('util'),
       Socket = net.Socket
 
+var Symbols = {}
+let tempSock = new Socket()
+for(let key of Reflect.ownKeys(tempSock)) {
+    if(typeof(key) == 'symbol') {
+        Symbols[Symbol.keyFor(key)] = key
+    }
+}
+
 class FakeSocket extends Socket {
     #counterpart;
     #encoding;
     #data;
+    //#buffer;
     
     constructor() {
         super(arguments);
         this.#data = Buffer.alloc(0);
+        //this.#buffer = [];
+        this.#encoding = null;
+        this.on('resume', () => {
+            let data = this._read()
+            if(data.length > 0) {
+                this.#counterpart._emit('data', data)
+            }
+        })
+    }
+    
+    _setBytesWritten(num) {
+        if(this._handle != null) {
+            this._handle.bytesWritten = num
+        } else {
+            this[Symbols['kBytesWritten']] = num
+        }
+    }
+    
+    _setBytesRead(num) {
+        if(this._handle != null) {
+            this._handle.bytesRead = num
+        } else {
+            this[Symbols['kBytesRead']] = num
+        }
     }
     
     setEncoding(encoding) {
@@ -32,12 +65,16 @@ class FakeSocket extends Socket {
         return this.#counterpart;
     }
     
-    read(size=-1, encode=true) {
+    _read(size=-1, encode=true) {
+        let prevlen = this.#data.length
         let end = size >= 0 ? size : this.#data.length
-        let data = size >= this.#data.slice(0, size) : this.#data.slice()
+        let data = this.#data.slice(0, end)
         this.#data = this.#data.slice(end)
         if(encode && this.#encoding != null) {
             data = data.toString(this.#encoding)
+        }
+        if(prevlen > 0) {
+            this._emit('drain')
         }
         return data
     }
@@ -46,17 +83,37 @@ class FakeSocket extends Socket {
         this.#data = Buffer.concat([Buffer.from(data, encoding), this.#data])
     }
     
+    _writeToBuffer(data, encoding='utf8') {
+        let buf = Buffer.from(data, encoding)
+        //this.#buffer.push(buf.length)
+        this.#data = Buffer.concat([this.#data, buf])
+    }
+    
     write(data, encoding='utf8', callback=null) {
-        let buf = Buffer.concat([read(-1, false), Buffer.from(data, encoding)])
-        let counterEncoding = this.#counterpart.getEncoding();
-        if(counterEncoding != null) {
-            buf = buf.toString(counterEncoding);
+        let buf = Buffer.concat([this._read(-1, false), Buffer.from(data, encoding)]);
+        
+        let shouldEmit = this.#counterpart.readableFlowing === true;
+        if(buf.length > 0) {
+            if(shouldEmit) {
+                let len = buf.length
+                //let counterEncoding = this.#counterpart.getEncoding();
+                //if(counterEncoding != null) {
+                //    buf = buf.toString(counterEncoding);
+                //}
+                this._setBytesWritten(this.bytesWritten + len)
+                process.nextTick(() => {
+                    this.#counterpart._emit('data', buf);
+                    this.#counterpart._setBytesRead(this.#counterpart.bytesRead + len)
+                })
+            } else {
+                this._writeToBuffer(data, encoding)
+            }
         }
-        this.#counterpart._emit('data', buf);
+        
         if(callback != null && (typeof(callback) == 'function' || callback instanceof Function)) {
             callback();
         }
-        return true;
+        return shouldEmit;
     }
     
     destroy(error) {
@@ -86,11 +143,23 @@ function createFakeSocket() {
     input.setCounterpart(output);
     output.setCounterpart(input);
     
-    input.mockConnect = function(server) {
+    input.mockConnect = function(server, callback) {
+        
+        if(typeof(callback) == 'function' || callback instanceof Function) { input.on('ready', callback) }
+        
         output._server = server;
         output.server = server;
         output.allowHalfOpen = server.allowHalfOpen;
+        
         server.emit('connection', output);
+        
+        input._emit('connect')
+        
+        this.writable = true
+        this.readable = true
+        
+        input._emit('ready')
+        
         return this;
     }
     
@@ -103,7 +172,7 @@ function createFakeSocket() {
 function createMultiSocket() {
     let input = new MultiFakeSocket();
     
-    input.mockConnect = function(server) {
+    input.mockConnect = function(server, callback) {
         output = new FakeSocket();
         input.addCounterpart(output);
         output.setCounterpart(input);
@@ -112,6 +181,8 @@ function createMultiSocket() {
         output.server = server;
         output.allowHalfOpen = server.allowHalfOpen;
         server.emit('connection', output);
+        
+       if(typeof(callback) == 'function') { callback() }
         
         return this;
     }

@@ -42,8 +42,9 @@ Triggering this will make its counterpart emit the event, use [`FakeSocket._emit
   
 Actually triggers the event specified, with the data specified.  
 
-### `FakeSocket.mockConnect(server)`  
-* `server` [`<net.Server>`](https://nodejs.org/api/net.html#class-netserver) The server to connect to.  
+### `FakeSocket.mockConnect(server[, callback])`  
+* `server` [`<net.Server>`](https://nodejs.org/api/net.html#class-netserver) The server to connect to.
+* `callback` `<Function>` A function that is automatically called when the socket is ready to be used.  
 * Returns: [`<FakeSocket>`](#class-fakesocket) The socket itself.  
   
 This is required for making the socket actually connect to the server, similar to [`net.Socket.connect()`](https://nodejs.org/api/net.html#socketconnect).  

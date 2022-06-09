@@ -17,11 +17,11 @@ var options = {
 // start a http request with the above options
 var req = http.request(options, res => {
     // log all of the returned data
-    res.on('data', d => console.log('Recieved data ' + d.toString()));
+    res.on('data', d => console.log('Recieved Data: ' + d.toString()));
 })
 // send the request
 req.end();
 
 // expected output:
 
-// Recieved data GET /
+// Recieved Data: GET /
