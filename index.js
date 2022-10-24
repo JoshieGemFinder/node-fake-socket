@@ -63,7 +63,7 @@ function applyEvents(input, output, tryPush) {
             if (writev) {
                 for(let d of data) {
                     tryPush(decode(d.chunk, d.encoding || encoding || this.defaultEncoding))
-                    process.nextTick(d.callback())
+                    process.nextTick(d.callback)
                 }
                 cb()
             } else {
