@@ -129,7 +129,10 @@ function createSockets() {
 function createFakeSocket() {
     let socks = createSockets()
     socks.output.connect = mustNotCall
-    socks.input.mockConnect = function(server) {
+    socks.input.mockConnect = function(server, fn) {
+        if(fn != null && (typeof(fn) == 'function' || fn instanceof Function)) {
+            socks.input.once('ready', fn)
+        }
         server.emit('connection', socks.output)
         process.nextTick(() => {
             socks.input.emit('connect')
